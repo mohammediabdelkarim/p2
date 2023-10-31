@@ -1,57 +1,77 @@
-from typing import List
+import csv
+import os
 
 import requests
 from bs4 import BeautifulSoup
 
 
-def get_book_data(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+def page_scrap(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
 
-    data = dict()
+    upc = soup.find(string="UPC").parent.parent.find("td").string
+    title = soup.find("h1").string
+    pit = soup.find(string="Price (incl. tax)").parent.parent.find("td").string
+    pet = soup.find(string="Price (excl. tax)").parent.parent.find("td").string
+    number = soup.find(string="Availability").parent.parent.find("td").string
+    description = soup.find("meta", {"name": "description"})['content'].removeprefix(
+        "\n   ").removesuffix("\n")
+    categorises = soup.find_all("li")
+    category = categorises[2].find("a").string
+    review_rating = soup.find(class_="star-rating")['class'][1]
+    image_url = soup.find("img")['src'].replace("../../", "http://books.toscrape.com/")
 
-    title = soup.select_one('title').get_text()
-    #price_including_tax = soup.select_one('p.price_color').get_text()
-    product_page_url = soup.select_one('script').get_text()
-    #img = soup.select_one('div.sub-header,p').get_text()
-    upc = soup.select_one('table.table-striped').get_text()
-    div = soup.find('div', {'class': 'product_main'})
-    h1 = div.find('h1')
-    data['title'] = h1.text
-    description = soup.find('p', class_='').text
-    liens_categorie = soup.find_all('a')
-    categorie = liens_categorie[3].text
-    image_base = soup.find('img')
-    image_lien = image_base['src']
-    image = 'http://books.toscrape.com' + image_lien[5:]
-
-    #version = liste_td[6].text
-
-    #price_including_tax =
-    #data['price_including_tax']
-
-    #div = soup.find('tr', {'th': 'td'})
-    #td = div.find('tr')
-    #data['td'] = td.text
-    #print(title)
-    #print(price_including_tax)
-    print(upc)
-    print(product_page_url)
-    print(description)
-    print(categorie)
-    print(image)
-    #print(img)
-    #print(data)
-    return data
+    info = [url, upc, title, pit, pet, number, description, category, review_rating, image_url]
+    return info
 
 
+def category_scrap(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
 
-book_data = get_book_data('https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html')
-print(book_data)
+    header = ['product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax',
+              'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating',
+              'image_url']
+    name = soup.find("h1").string
+
+    if not os.path.isdir('data'):
+        os.mkdir('data')
+
+    if not os.path.isdir('data/' + name):
+        os.mkdir('data/' + name)
+        os.mkdir('data/' + name + '/images')
+
+    with open('data/' + name + '/' + name + '.csv', 'w', newline='', encoding='utf-8') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(header)
+
+        books = soup.find_all("div", class_="image_container")
+
+        isnext = soup.find("li", class_="next")
+        while isnext:
+            url = url.removesuffix("index.html") + isnext.find("a")["href"]
+            page = requests.get(url)
+            soup = BeautifulSoup(page.content, 'html.parser')
+            books.extend(soup.find_all("div", class_="image_container"))
+            isnext = soup.find("li", class_="next")
+
+        for book in books:
+            url = "http://books.toscrape.com/catalogue/" + book.a["href"].removeprefix("../../../")
+            info = page_scrap(url)
+            writer.writerow(info)
+            image = requests.get(info[-1])
+            with open("data/" + name + "/images/" + info[2].replace(':', '').replace('/','').replace('\\', '').replace('"', '').replace('.', '').replace('*', '').replace('?','') + ".jpg", 'wb') as f:
+                f.write(image.content)
 
 
-#product_page_url
+def scraper(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
 
-#● category
+    categories = soup.find("ul", class_="nav").find("ul").find_all("a")
+    for category in categories:
+        print(category["href"])
+        category_scrap(url + category["href"])
 
-#● image_url
+
+scraper("https://books.toscrape.com/")
