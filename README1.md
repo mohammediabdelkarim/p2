@@ -20,7 +20,7 @@ Il parcours chaque catégorie de livre sur le site afin de :
         category
         review_rating
         image_url
-    télécharger les images de chaque livre de la catégorie dans le répertoire "nom_de_catégorie"\images\
+  
 
 Environnement d'utilisation :
 
