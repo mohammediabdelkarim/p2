@@ -24,7 +24,9 @@ Il parcours chaque catégorie de livre sur le site afin de :
 
 Environnement d'utilisation :
 
-    Python 3.8.11
+    Python==3.8.11
+    requests==2.31.0
+    bs4==0.0.1
 
 Utilisation
 
