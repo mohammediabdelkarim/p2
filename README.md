@@ -43,7 +43,7 @@ Pour lancer le programme de scrapping il est nécessaire de créer un environnem
 Activer env virtuel
     
     sous mac/linux : source venv/bin/activate
-    sous windows   : 
+    sous windows   : env\Scripts\activate.bat
 
 Une fois l'environnement configurer, lancer le programme :
 
