@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,13 +13,25 @@ def page_scrap(url):
     upc = soup.find(string="UPC").parent.parent.find("td").string
     title = soup.find("h1").string
     pit = soup.find(string="Price (incl. tax)").parent.parent.find("td").string
+    pit = pit[1::]
     pet = soup.find(string="Price (excl. tax)").parent.parent.find("td").string
+    pet = pet[1::]
     number = soup.find(string="Availability").parent.parent.find("td").string
+    number = re.findall('[0-9]+', number)
+    number = number[0]
     description = soup.find("meta", {"name": "description"})['content'].removeprefix(
         "\n   ").removesuffix("\n")
     categorises = soup.find_all("li")
     category = categorises[2].find("a").string
     review_rating = soup.find(class_="star-rating")['class'][1]
+    mappage = {'one': 1,
+               'two': 2,
+               'three': 3,
+               'four': 4,
+               'five': 5}
+
+    review_rating = mappage.get(review_rating, '---')
+
     image_url = soup.find("img")['src'].replace("../../", "http://books.toscrape.com/")
 
     info = [url, upc, title, pit, pet, number, description, category, review_rating, image_url]
