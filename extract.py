@@ -24,11 +24,11 @@ def page_scrap(url):
     categorises = soup.find_all("li")
     category = categorises[2].find("a").string
     review_rating = soup.find(class_="star-rating")['class'][1]
-    mappage = {'one': 1,
-               'two': 2,
-               'three': 3,
-               'four': 4,
-               'five': 5}
+    mappage = {'One': 1,
+               'Two': 2,
+               'Three': 3,
+               'Four': 4,
+               'Five': 5}
 
     review_rating = mappage.get(review_rating, '---')
 
